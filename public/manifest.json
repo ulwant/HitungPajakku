@@ -1,0 +1,21 @@
+{
+    "name": "HitungPajakku",
+    "short_name": "HitungPajakku",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1F2937",
+    "description": "HitungPajakku — aplikasi kalkulator pajak Indonesia untuk PPh, PPN, dan lainnya.",
+    "icons": [
+        {
+            "src": "/icons/icon-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/icons/icon-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- Primary Meta Tags -->
+  <title>HitungPajakku - Hitung PPh 21, Freelancer, Impor, dan lainnya</title>
+  <meta name="title" content="HitungPajakku - Hitung PPh 21, Freelancer & Impor" />
+  <meta name="description"
+    content="Aplikasi kalkulator pajak terlengkap di Indonesia. Hitung PPh 21 Karyawan (TER 2025), PPh Freelancer (NPPN), Pajak Impor Bea Cukai, PPN, dan Sanksi Denda secara akurat, gratis, dan profesional." />
+  <meta name="keywords"
+    content="kalkulator pajak, pph 21 2025, hitung pajak karyawan, pajak freelancer, nppn, bea cukai, pajak impor, denda telat lapor pajak, pph 23, ppn 11 persen, hitungpajakku, simulasi pajak" />
+  <meta name="author" content="HitungPajakku" />
+  <meta name="theme-color" content="#2563EB" />
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://kalkulator-pajak.pages.dev/" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://kalkulator-pajak.pages.dev/" />
+  <meta property="og:title" content="HitungPajakku - Solusi Pajak Lengkap Indonesia" />
+  <meta property="og:description"
+    content="HitungPajakku membantu Anda menghitung PPh 21, Freelancer, Bea Cukai, dan Denda Pajak secara cepat dan akurat." />
+  <meta property="og:image" content="https://kalkulator-pajak.pages.dev/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="HitungPajakku - Hitung PPh 21, Freelancer & Impor" />
+  <meta property="og:site_name" content="HitungPajakku" />
+  <meta property="og:locale" content="id_ID" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://kalkulator-pajak.pages.dev/" />
+  <meta property="twitter:title" content="HitungPajakku 2025" />
+  <meta property="twitter:description"
+    content="HitungPajakku membantu Anda menghitung berbagai pajak Indonesia secara cepat dan profesional." />
+  <meta property="twitter:image" content="https://kalkulator-pajak.pages.dev/og-image.jpg" />
+  <meta property="twitter:image:alt" content="HitungPajakku - Hitung PPh 21, Freelancer & Impor" />
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" href="/favicon.svg" />
+
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', "Liberation Mono", "Courier New", 'monospace'],
+          },
+          colors: {
+            pajak: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              900: '#0c4a6e',
+            },
+          },
+          animation: {
+            'blob': 'blob 10s infinite',
+            'fade-up': 'fadeUp 0.5s ease-out forwards',
+            'enter': 'enter 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+            'apple-enter': 'appleEnter 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+            'shimmer': 'shimmer 2s linear infinite',
+            'slide-up-reveal': 'slideUpReveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'scale-in': 'scaleIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+          keyframes: {
+            blob: {
+              '0%': { transform: 'translate(0px, 0px) scale(1)' },
+              '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+              '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+              '100%': { transform: 'translate(0px, 0px) scale(1)' },
+            },
+            fadeUp: {
+              '0%': { opacity: '0', transform: 'translateY(20px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            enter: {
+              '0%': { opacity: '0', transform: 'translateY(8px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            appleEnter: {
+              '0%': { opacity: '0', transform: 'translateY(20px) scale(0.96)', filter: 'blur(4px)' },
+              '100%': { opacity: '1', transform: 'translateY(0) scale(1)', filter: 'blur(0px)' },
+            },
+            shimmer: {
+              '0%': { transform: 'translateX(-100%)' },
+              '100%': { transform: 'translateX(100%)' }
+            },
+            slideUpReveal: {
+              '0%': { transform: 'translateY(100%)', opacity: '0' },
+              '100%': { transform: 'translateY(0)', opacity: '1' }
+            },
+            scaleIn: {
+              '0%': { transform: 'scale(0.8)', opacity: '0' },
+              '100%': { transform: 'scale(1)', opacity: '1' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="/index.css">
+
+  <!-- Cloudflare Turnstile -->
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+
+  <!-- Service worker is managed by the app entry (`index.tsx`) and
+       is only registered in production. Removed inline registration
+       and Cloudflare Turnstile script to disable the Cloudflare splash. -->
+
+</body>
+
+</html>
