@@ -212,6 +212,11 @@ const App: React.FC = () => {
                 </div>
               </div>
 
+              {/* Mobile auth controls */}
+              <div className="pt-4">
+                <Auth />
+              </div>
+
               <div className="pt-6 text-center">
                 <p className="text-xs text-slate-400 font-medium">Versi 3.5.0 &bull; HitungPajakku</p>
               </div>
