@@ -1,12 +1,12 @@
 # HitungPajakku
 
-**Aplikasi kalkulator pajak profesional untuk Indonesia dengan dukungan AI**
+**Aplikasi kalkulator pajak profesional**
 
 ---
 
 ## Deskripsi
 
-Aplikasi web modern untuk menghitung berbagai jenis pajak Indonesia dengan cepat dan akurat. Dilengkapi asisten AI berbasis **Google Gemini** untuk konsultasi pajak real-time.
+Aplikasi PWA untuk menghitung berbagai jenis pajak Indonesia dengan cepat dan akurat.
 
 ---
 
@@ -20,11 +20,11 @@ Aplikasi web modern untuk menghitung berbagai jenis pajak Indonesia dengan cepat
 - **PPnBM** - Pajak Barang Mewah (10%-95%)
 
 ### Fitur Lainnya
-- 🤖 **Asisten AI** - Konsultasi pajak dengan Google Gemini
-- 📅 **Kalender Pajak** - Pengingat deadline
-- 📜 **Riwayat** - Simpan perhitungan
-- 🖨️ **Print-Friendly** - Export ke PDF
-- 📱 **Responsive** - Optimal di semua device
+-  **Asisten AI** - Konsultasi pajak dengan Google Gemini
+-  **Kalender Pajak** - Pengingat deadline
+-  **Riwayat** - Simpan perhitungan
+-  **Print-Friendly** - Export ke PDF
+-  **Responsive** - Optimal di semua device
 
 ---
 
@@ -39,32 +39,23 @@ Aplikasi web modern untuk menghitung berbagai jenis pajak Indonesia dengan cepat
 ```bash
 # Clone repository
 git clone <repository-url>
-cd kalkulator-pajak-pro
+cd HitungPajakku
 
 # Install dependencies
 pnpm install
 
 # Setup environment
-cp .env.example .env.local
+cp .env .env.local
 # Edit .env.local dan tambahkan:
-# - GEMINI_API_KEY dari https://aistudio.google.com/
-# - VITE_TURNSTILE_SITE_KEY (opsional, sudah ada default untuk development)
+# - VITE_SUPABASE_API_KEY dari supabase
+# - VITE_VITE)_SUPABASE_URL (opsional, sudah ada default untuk development)
 
 # Jalankan aplikasi
 pnpm dev
 ```
 
-Aplikasi akan berjalan di `http://localhost:3000`
+Aplikasi akan berjalan di `http://localhost:3004`
 
-### 🔒 Cloudflare Turnstile (Security)
-
-Aplikasi ini menggunakan **Cloudflare Turnstile** sebagai lapisan keamanan untuk melindungi dari bot dan automated attacks. Turnstile adalah alternatif modern dari CAPTCHA yang lebih user-friendly.
-
-**Mengapa Turnstile?**
-- ✅ Melindungi dari bot dan spam
-- ✅ Pengalaman pengguna lebih baik (tanpa puzzle CAPTCHA)
-- ✅ Gratis untuk penggunaan standar
-- ✅ Privacy-focused (tidak tracking pengguna)
 
 **Konfigurasi:**
 
@@ -73,36 +64,12 @@ Aplikasi ini menggunakan **Cloudflare Turnstile** sebagai lapisan keamanan untuk
 - Tidak perlu setup tambahan untuk development lokal
 - Test key: `1x00000000000000000000AA`
 
-**Production:**
-1. Daftar di [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. Buat Turnstile site key baru
-3. Tambahkan ke `.env.local`:
-   ```env
-   VITE_TURNSTILE_SITE_KEY=your_production_site_key
-   ```
-
-### Docker Deployment
-
-```bash
-# Setup environment
-cp .env.example .env
-
-# Build dan jalankan
-docker-compose up -d
-```
-
-Aplikasi akan berjalan di `http://localhost:8080`
-
-Lihat [DOCKER.md](./DOCKER.md) untuk deployment lengkap.
-
----
 
 ## Teknologi
 
 - **React 19** + **TypeScript 5.8** + **Vite 6**
 - **Tailwind CSS** - Styling
-- **Google Gemini AI** - Asisten pajak
-- **LocalStorage** - Persistensi data
+- **SUPABASE API** - Persistensi data
 
 ---
 
@@ -144,20 +111,14 @@ PKP = Neto - PTKP
 
 ## License
 
-MIT License - Lihat [LICENSE](./LICENSE)
+
 
 ---
 
-## Disclaimer
 
-**PENTING**: Aplikasi ini adalah alat bantu estimasi dan **BUKAN** pengganti konsultasi pajak profesional. Pengembang tidak bertanggung jawab atas kerugian finansial atau hukum dari penggunaan aplikasi ini.
 
 ---
 
 <div align="center">
-
-**Dibuat dengan ❤️ untuk Wajib Pajak Indonesia**
-
-⭐ Star repository ini jika bermanfaat!
 
 </div>
