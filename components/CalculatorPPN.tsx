@@ -1,3 +1,5 @@
+// File: CalculatorPPN.tsx (Sudah Diperbarui dengan Async/Await)
+
 import React, { useState, useEffect } from 'react';
 import { PPN_RATE } from '../constants';
 import { formatCurrency } from '../services/taxLogic';
@@ -52,7 +54,10 @@ const CalculatorPPN: React.FC<Props> = ({ onContextUpdate }) => {
     setDisplayAmount(cleanVal ? new Intl.NumberFormat('id-ID').format(numVal) : '');
   };
 
-  const handleSave = () => {
+  // =======================================================
+  // PERUBAHAN UTAMA: Tambahkan 'async' dan 'await'
+  // =======================================================
+  const handleSave = async () => { 
     const details = `
 DPP (Dasar Pengenaan Pajak): ${formatCurrency(amount)}
 Tarif PPN: 11%
@@ -61,7 +66,7 @@ Nominal PPN: ${formatCurrency(taxAmount)}
 Total Tagihan: ${formatCurrency(totalAmount)}
     `.trim();
 
-    saveHistoryItem({
+    await saveHistoryItem({ // <-- WAJIB 'await'
       type: TaxType.PPN,
       title: 'PPN',
       summary: `DPP ${formatCurrency(amount)}`,
