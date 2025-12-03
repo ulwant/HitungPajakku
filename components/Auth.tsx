@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { signInWithEmail, signUpWithEmail, signOut, getCurrentUser, onAuthChange } from '../services/auth';
+import { claimLocalHistoryForUser, syncRemoteToLocal } from '../services/historyService';
 
 const Auth: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -12,8 +13,17 @@ const Auth: React.FC = () => {
   useEffect(() => {
     let mounted = true;
     getCurrentUser().then(u => { if (mounted) setUser(u); });
-    const unsub = onAuthChange((_event, session) => {
+    const unsub = onAuthChange(async (event, session) => {
+      if (!mounted) return;
       setUser(session?.user ?? null);
+      if (event === 'SIGNED_IN' && session) {
+        try {
+          await claimLocalHistoryForUser();
+          await syncRemoteToLocal();
+        } catch (error) {
+          console.error('Failed to sync history:', error);
+        }
+      }
     });
     return () => { mounted = false; unsub(); };
   }, []);
