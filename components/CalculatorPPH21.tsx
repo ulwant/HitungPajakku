@@ -100,7 +100,8 @@ const CalculatorPPH21: React.FC<Props> = ({ onContextUpdate }) => {
       setIsSaved(false);
    };
 
-   const handleSave = () => {
+   // TELAH DIUBAH: Menambahkan 'async' dan 'await'
+   const handleSave = async () => { 
       if (!result) return;
 
       const details = `
@@ -116,7 +117,7 @@ Est. Pajak Tahunan: ${formatCurrency(result.annualTax)}
 Pajak Desember (Sisa): ${formatCurrency(result.taxDecember)}
     `.trim();
 
-      saveHistoryItem({
+      await saveHistoryItem({ // <-- Wajib 'await'
          type: TaxType.PPH21,
          title: `PPh 21 ${formState.method === PPh21Method.GROSS ? '(Gross)' : '(Gross Up)'}`,
          summary: `Gaji ${formatCurrency(formState.grossSalary)}, ${formState.maritalStatus}/${formState.children}`,
