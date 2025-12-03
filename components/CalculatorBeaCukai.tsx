@@ -1,3 +1,4 @@
+// File: CalculatorBeaCukai.tsx (Sudah Diperbarui dengan Async/Await)
 
 import React, { useState, useEffect } from 'react';
 import { BC_THRESHOLD_USD, BC_PPN_RATE, BC_GOODS_CATEGORY } from '../constants';
@@ -61,7 +62,6 @@ const CalculatorBeaCukai: React.FC<Props> = ({ onContextUpdate }) => {
   const nilaiImpor = cifIDR + beaMasuk;
 
   // 3. PPN & PPh
-  // PPN and PPh usually rounded standardly, but often rounded down in tax apps. Keeping standard Math.round or floor for safe estimate.
   const ppn = Math.round(nilaiImpor * BC_PPN_RATE);
   const pph = Math.round(nilaiImpor * pphRate);
 
@@ -105,7 +105,10 @@ const CalculatorBeaCukai: React.FC<Props> = ({ onContextUpdate }) => {
     displaySetter(cleanVal ? new Intl.NumberFormat('id-ID').format(numVal) : '');
   };
 
-  const handleSave = () => {
+  // =======================================================
+  // PERUBAHAN UTAMA: Tambahkan 'async' dan 'await'
+  // =======================================================
+  const handleSave = async () => { 
     const details = `
 Jenis: ${category.label}
 FOB: USD ${displayFob} | CIF: USD ${formatNumberInput(cifUSD)}
@@ -118,7 +121,7 @@ PPh Impor: ${formatCurrency(pph)}
 Total Pajak: ${formatCurrency(totalPajak)}
     `.trim();
 
-    saveHistoryItem({
+    await saveHistoryItem({ // <-- WAJIB 'await'
       type: TaxType.BEA_CUKAI,
       title: 'Bea Masuk & Impor',
       summary: `${category.label} - USD ${displayFob}`,
@@ -171,7 +174,7 @@ Total Pajak: ${formatCurrency(totalPajak)}
 
             {/* Kurs */}
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Kurs Pajak (IDR per 1 USD)</label>
+              <label className={LABEL_STYLE}>Kurs Pajak (IDR per 1 USD)</label>
               <div className="relative group">
                 <span className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold group-focus-within:text-blue-500 transition-colors no-print">Rp</span>
                 <input
@@ -188,7 +191,7 @@ Total Pajak: ${formatCurrency(totalPajak)}
             {/* CIF Inputs */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Harga (FOB)</label>
+                <label className={LABEL_STYLE}>Harga (FOB)</label>
                 <div className="relative group">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs group-focus-within:text-blue-500 transition-colors no-print">USD</span>
                   <input
@@ -201,7 +204,7 @@ Total Pajak: ${formatCurrency(totalPajak)}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Ongkir</label>
+                <label className={LABEL_STYLE}>Ongkir</label>
                 <div className="relative group">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs group-focus-within:text-blue-500 transition-colors no-print">USD</span>
                   <input
@@ -214,7 +217,7 @@ Total Pajak: ${formatCurrency(totalPajak)}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Asuransi</label>
+                <label className={LABEL_STYLE}>Asuransi</label>
                 <div className="relative group">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs group-focus-within:text-blue-500 transition-colors no-print">USD</span>
                   <input
