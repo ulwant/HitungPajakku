@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { getHistory, clearHistory, deleteHistoryItem } from '../services/historyService';
+import { getHistory, clearHistory, deleteHistoryItem, syncRemoteToLocal, startRealtimeHistorySync, stopRealtimeHistorySync } from '../services/historyService';
 import { HistoryItem } from '../types';
 import { formatCurrency } from '../services/taxLogic';
 import { History, Trash2, Clock, Calendar, ArrowRight, X, Printer, Check, Calculator, FileText } from './Icons';
@@ -11,6 +11,10 @@ const HistoryPage: React.FC = () => {
 
   useEffect(() => {
     setHistory(getHistory());
+    // start realtime subscription so this page updates when other devices add history
+    let mounted = true;
+    startRealtimeHistorySync((items) => { if (mounted) setHistory(items); }).catch(() => {});
+    return () => { mounted = false; stopRealtimeHistorySync().catch(() => {}); };
   }, []);
 
   // Prevent body scroll when modal is open
@@ -106,13 +110,16 @@ const HistoryPage: React.FC = () => {
       {/* Toolbar Actions */}
       {history.length > 0 && (
         <div className="flex justify-end no-print">
-           <button 
-              onClick={handleClearAll}
-              className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 rounded-xl transition-colors text-sm font-bold"
-            >
-              <Trash2 size={16} />
-              Hapus Semua
-            </button>
+           <div className="flex items-center gap-2">
+             <button onClick={async () => { await syncRemoteToLocal(); setHistory(getHistory()); }} className="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50">Sinkronisasi</button>
+             <button 
+                onClick={handleClearAll}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 rounded-xl transition-colors text-sm font-bold"
+              >
+                <Trash2 size={16} />
+                Hapus Semua
+              </button>
+           </div>
         </div>
       )}
 

@@ -97,9 +97,15 @@ export const clearHistory = () => {
 export const syncRemoteToLocal = async () => {
   if (!supabase) return;
   try {
+    // Ensure we only fetch histories for the currently authenticated user.
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id ?? null;
+    if (!userId) return; // no signed-in user => nothing to sync
+
     const { data, error } = await supabase
       .from('histories')
       .select('*')
+      .eq('user_id', userId)
       .order('inserted_at', { ascending: false })
       .limit(50);
 
@@ -134,5 +140,109 @@ export const syncRemoteToLocal = async () => {
     setLocalHistory(merged);
   } catch (err) {
     console.warn('syncRemoteToLocal error', err);
+  }
+};
+
+// Realtime subscription handling
+let _realtimeSubscription: any = null;
+
+export const startRealtimeHistorySync = async (onChange?: (items: HistoryItem[]) => void) => {
+  if (!supabase) return;
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id ?? null;
+    if (!userId) return;
+
+    if ((supabase as any).channel) {
+      const channel = (supabase as any).channel(`public:histories:user:${userId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'histories', filter: `user_id=eq.${userId}` }, (payload: any) => {
+          try {
+            const local = getHistory();
+            if (payload.eventType === 'INSERT') {
+              const r = payload.new;
+              const newItem: HistoryItem = {
+                id: r.id,
+                type: r.type,
+                title: r.title,
+                summary: r.summary,
+                resultAmount: Number(r.result_amount) || 0,
+                details: r.details,
+                timestamp: new Date(r.inserted_at).getTime(),
+              };
+              const updated = [newItem, ...local].slice(0, 50);
+              setLocalHistory(updated);
+              onChange?.(updated);
+            } else if (payload.eventType === 'DELETE') {
+              const deletedId = payload.old?.id;
+              const updated = local.filter(i => i.id !== deletedId);
+              setLocalHistory(updated);
+              onChange?.(updated);
+            } else if (payload.eventType === 'UPDATE') {
+              const r = payload.new;
+              const updated = local.map(it => it.id === r.id ? ({
+                id: r.id,
+                type: r.type,
+                title: r.title,
+                summary: r.summary,
+                resultAmount: Number(r.result_amount) || 0,
+                details: r.details,
+                timestamp: new Date(r.inserted_at).getTime(),
+              }) : it);
+              setLocalHistory(updated);
+              onChange?.(updated);
+            }
+          } catch (err) {
+            console.warn('realtime payload handling failed', err);
+          }
+        });
+
+      await channel.subscribe();
+      _realtimeSubscription = channel;
+      return;
+    }
+
+    if ((supabase as any).from) {
+      const sub = (supabase as any).from(`histories:user_id=eq.${userId}`).on('*', (payload: any) => {
+        const local = getHistory();
+        if (payload.eventType === 'INSERT' || payload.type === 'INSERT') {
+          const r = payload.new ?? payload.record;
+          const newItem: HistoryItem = {
+            id: r.id,
+            type: r.type,
+            title: r.title,
+            summary: r.summary,
+            resultAmount: Number(r.result_amount) || 0,
+            details: r.details,
+            timestamp: new Date(r.inserted_at).getTime(),
+          };
+          const updated = [newItem, ...local].slice(0, 50);
+          setLocalHistory(updated);
+          onChange?.(updated);
+        } else if (payload.eventType === 'DELETE' || payload.type === 'DELETE') {
+          const id = payload.old?.id ?? payload.record?.id;
+          const updated = local.filter(i => i.id !== id);
+          setLocalHistory(updated);
+          onChange?.(updated);
+        }
+      }).subscribe();
+      _realtimeSubscription = sub;
+    }
+  } catch (err) {
+    console.warn('startRealtimeHistorySync error', err);
+  }
+};
+
+export const stopRealtimeHistorySync = async () => {
+  try {
+    if (!_realtimeSubscription) return;
+    if (_realtimeSubscription.unsubscribe) {
+      await _realtimeSubscription.unsubscribe();
+    } else if (_realtimeSubscription.remove) {
+      _realtimeSubscription.remove();
+    }
+  } catch (err) {
+    console.warn('stopRealtimeHistorySync error', err);
+  } finally {
+    _realtimeSubscription = null;
   }
 };
