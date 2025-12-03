@@ -1,3 +1,4 @@
+// File: CalculatorFinal.tsx (Sudah Diperbarui dengan Async/Await)
 
 import React, { useState, useEffect } from 'react';
 import { PPH_FINAL_RATES } from '../constants';
@@ -55,7 +56,10 @@ const CalculatorFinal: React.FC<Props> = ({ onContextUpdate }) => {
     setDisplayAmount(cleanVal ? new Intl.NumberFormat('id-ID').format(numVal) : '');
   };
 
-  const handleSave = () => {
+  // =======================================================
+  // PERUBAHAN UTAMA: Tambahkan 'async' dan 'await'
+  // =======================================================
+  const handleSave = async () => { 
     const details = `
 Kategori: ${rateObj?.label}
 Nilai Transaksi: ${formatCurrency(amount)}
@@ -65,7 +69,7 @@ Pajak Terutang: ${formatCurrency(taxAmount)}
 Sisa Setelah Pajak: ${formatCurrency(netReceived)}
     `.trim();
 
-    saveHistoryItem({
+    await saveHistoryItem({ // <-- WAJIB 'await'
       type: TaxType.PPH_FINAL,
       title: 'PPh Final',
       summary: `${rateObj?.label.substring(0, 20)}... - ${formatCurrency(amount)}`,
