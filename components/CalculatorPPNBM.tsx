@@ -1,3 +1,4 @@
+// File: CalculatorPPNBM.tsx (Sudah Diperbarui dengan Async/Await)
 
 import React, { useState, useEffect } from 'react';
 import { PPNBM_RATES, PPN_RATE } from '../constants';
@@ -65,7 +66,10 @@ const CalculatorPPNBM: React.FC<Props> = ({ onContextUpdate }) => {
     setDisplayAmount(cleanVal ? new Intl.NumberFormat('id-ID').format(numVal) : '');
   };
 
-  const handleSave = () => {
+  // =======================================================
+  // PERUBAHAN UTAMA: Tambahkan 'async' dan 'await'
+  // =======================================================
+  const handleSave = async () => { 
     const details = `
 Kategori: ${rateObj?.label}
 Harga Barang: ${formatCurrency(amount)}
@@ -76,7 +80,7 @@ ${includePPN ? `PPN (11%): ${formatCurrency(ppnAmount)}` : ''}
 Total Harga Jual: ${formatCurrency(totalAmount)}
     `.trim();
 
-    saveHistoryItem({
+    await saveHistoryItem({ // <-- WAJIB 'await'
       type: TaxType.PPNBM,
       title: 'PPnBM',
       summary: `Harga ${formatCurrency(amount)}`,
@@ -121,7 +125,7 @@ Total Harga Jual: ${formatCurrency(totalAmount)}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Kategori Barang</label>
+              <label className={LABEL_STYLE}>Kategori Barang</label>
               <div className="relative">
                 <select
                   value={subType}
