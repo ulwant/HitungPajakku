@@ -1,3 +1,4 @@
+// File: CalculatorNPPN.tsx (Sudah Diperbarui dengan Async/Await)
 
 import React, { useState, useEffect } from 'react';
 import { NPPN_PROFESSIONS, PTKP_BASE, PTKP_MARRIED, PTKP_PER_CHILD, PPH21_BRACKETS } from '../constants';
@@ -69,7 +70,7 @@ const CalculatorNPPN: React.FC<Props> = ({ onContextUpdate }) => {
 
    useEffect(() => {
       onContextUpdate(`
-      Kalkulator: PPh Freelancer (Pekerjaan Bebas / NPPN)
+      Kalkulator: PPh Freelancer (Pekerja Bebas / NPPN)
       Profesi: ${profession.label}
       Omzet Bruto (Tahun): ${formatCurrency(grossIncome)}
       Norma Penghitungan: ${(normaRate * 100).toFixed(0)}%
@@ -99,7 +100,10 @@ const CalculatorNPPN: React.FC<Props> = ({ onContextUpdate }) => {
       setDisplayGross(cleanVal ? new Intl.NumberFormat('id-ID').format(numVal) : '');
    };
 
-   const handleSave = () => {
+   // =======================================================
+   // PERUBAHAN UTAMA: Tambahkan 'async' dan 'await'
+   // =======================================================
+   const handleSave = async () => { 
       const details = `
 Profesi: ${profession.label}
 Norma: ${(normaRate * 100).toFixed(0)}%
@@ -112,7 +116,7 @@ PKP: ${formatCurrency(pkp)}
 Pajak Terutang: ${formatCurrency(annualTax)}
     `.trim();
 
-      saveHistoryItem({
+      await saveHistoryItem({ // <-- WAJIB 'await'
          type: TaxType.NPPN,
          title: 'PPh Freelancer',
          summary: `${profession.label} - ${formatCurrency(grossIncome)}`,
@@ -140,9 +144,6 @@ Pajak Terutang: ${formatCurrency(annualTax)}
       setTimeout(() => setIsCopied(false), 2000);
    };
 
-   const [isModalOpen, setIsModalOpen] = useState(false);
-
-   // Consistent Styles
    const LABEL_STYLE = "block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1";
    const INPUT_CONTAINER_STYLE = "relative group";
    const INPUT_FIELD_STYLE = "w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl outline-none transition-all font-bold text-base text-slate-900 placeholder:text-slate-300 h-[50px]";
