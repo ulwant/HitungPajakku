@@ -1,3 +1,4 @@
+// File: CalculatorPPH23.tsx (Sudah Diperbarui dengan Async/Await)
 
 import React, { useState, useEffect } from 'react';
 import { PPH23_RATES } from '../constants';
@@ -61,7 +62,10 @@ const CalculatorPPH23: React.FC<Props> = ({ onContextUpdate }) => {
     setDisplayAmount(cleanVal ? new Intl.NumberFormat('id-ID').format(numVal) : '');
   };
 
-  const handleSave = () => {
+  // =======================================================
+  // PERUBAHAN UTAMA: Tambahkan 'async' dan 'await'
+  // =======================================================
+  const handleSave = async () => {
     const details = `
 Kategori: ${subType}
 Status NPWP: ${hasNPWP ? 'Ya' : 'Tidak'}
@@ -72,7 +76,7 @@ Potongan Pajak: ${formatCurrency(taxAmount)}
 Diterima Bersih: ${formatCurrency(netReceived)}
     `.trim();
 
-    saveHistoryItem({
+    await saveHistoryItem({ // <-- Wajib 'await'
       type: TaxType.PPH23,
       title: 'PPh 23',
       summary: `${subType} - Gross ${formatCurrency(amount)}`,
