@@ -1,3 +1,5 @@
+// File: CalculatorSanksi.tsx (Sudah Diperbarui dengan Async/Await)
+
 import React, { useState, useEffect } from 'react';
 import { SANKSI_TYPES, DEFAULT_KMK_RATE } from '../constants';
 import { formatCurrency } from '../services/taxLogic';
@@ -44,9 +46,6 @@ const CalculatorSanksi: React.FC<Props> = ({ onContextUpdate }) => {
   if (end > start) {
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-    // UU KUP: Bagian dari bulan dihitung 1 bulan penuh
-    // Approximation: We can use date difference logic. 
-    // Accurate way: count months crossing. Simplest robust way is diff in months + 1 if days remain.
     
     let years = end.getFullYear() - start.getFullYear();
     let months = end.getMonth() - start.getMonth();
@@ -55,42 +54,7 @@ const CalculatorSanksi: React.FC<Props> = ({ onContextUpdate }) => {
     monthsLate = years * 12 + months;
     if (days > 0) monthsLate += 1;
     
-    // If days is negative (e.g. Jan 20 to Feb 10 is < 1 month), the logic handles it? 
-    // Wait, strict calculation:
-    // Date-to-date.
-    // Example: Due Jan 10, Pay Feb 11.
-    // Jan 10 to Feb 10 = 1 month. + 1 day = 2 months.
-    
-    // Let's use a simpler "Ceil of days / 30" approach often used in quick estimations, 
-    // OR strictly follow strict month logic. Let's do strict month logic.
-    // Logic above (years*12 + months) gives calendar month diff.
-    // If end day > start day, we entered a new month fraction.
-    // if (end.getDate() > start.getDate()) -> this logic is handled by the diff.
-    
-    // Correction:
-    // Due: 10 Jan. Pay: 12 Feb.
-    // Years: 0. Months: 1. Days: 2.
-    // Result: 1 + 1 = 2 months. Correct.
-    
-    // Due: 10 Jan. Pay: 5 Feb.
-    // Years: 0. Months: 1. Days: -5.
-    // Result: 1 + 0? No. 
-    // If days <= 0, it means we haven't crossed the full month boundary of the current month index.
-    // But wait, 10 Jan to 5 Feb is < 1 month, so it should be 1 month.
-    
-    // Robust logic:
-    // 1. Total days.
-    // 2. Any positive days = at least 1 month.
-    // Let's stick to the years*12 + months logic, but handle the day offset carefully.
-    // Actually, simpler: 
-    // monthDiff = (y2-y1)*12 + (m2-m1).
-    // If d2 > d1, monthDiff += 1.
-    // But this assumes d2 > d1 means a new month started.
-    // Example: 10 Jan to 5 Feb. (0)*12 + (1) = 1. d2(5) > d1(10) is False. Total 1. Correct.
-    // Example: 10 Jan to 15 Feb. (0)*12 + (1) = 1. d2(15) > d1(10) is True. Total 2. Correct.
-    
     if (monthsLate < 0) monthsLate = 0;
-    // Max duration per UU Cipta Kerja for 'Self Correction' is effectively based on actual months, but usually capped at 24 for STP issuance logic in old rules. New rules allow >24 months for certain cases. We will NOT cap it strictly but warn if > 24.
     if (monthsLate === 0 && diffDays > 0) monthsLate = 1;
   }
   
@@ -147,7 +111,10 @@ const CalculatorSanksi: React.FC<Props> = ({ onContextUpdate }) => {
     displaySetter(cleanVal ? new Intl.NumberFormat('id-ID').format(numVal) : '');
   };
 
-  const handleSave = () => {
+  // =======================================================
+  // PERUBAHAN UTAMA: Tambahkan 'async' dan 'await'
+  // =======================================================
+  const handleSave = async () => { 
     const details = `
 Jenis: ${sanksiType.label}
 Pokok Pajak: ${formatCurrency(amount)}
@@ -159,7 +126,7 @@ Denda Admin: ${formatCurrency(adminFine)}
 Total Sanksi: ${formatCurrency(totalFine)}
     `.trim();
 
-    saveHistoryItem({
+    await saveHistoryItem({ // <-- WAJIB 'await'
       type: TaxType.SANKSI,
       title: 'Sanksi & Denda',
       summary: `Telat ${monthsLate} Bln - Pokok ${formatCurrency(amount)}`,
@@ -488,14 +455,14 @@ Total Tagihan: ${formatCurrency(totalBill)}
                         <span className="font-bold text-slate-700">{formatCurrency(interestFine)}</span>
                      </div>
                      {includeAdminFine && (
-                         <div className="flex justify-between items-center text-red-500">
+                         <div className=\"flex justify-between items-center text-red-500\">
                             <span>+ Denda Telat Lapor (Admin)</span>
-                            <span className="font-bold">{formatCurrency(adminFine)}</span>
+                            <span className=\"font-bold\">{formatCurrency(adminFine)}</span>
                          </div>
                      )}
-                     <div className="flex justify-between items-center border-t border-blue-200 pt-3 mt-1">
-                        <span className="text-blue-800 font-bold">Total Sanksi & Denda</span>
-                        <span className="font-black text-blue-700 text-lg">{formatCurrency(totalFine)}</span>
+                     <div className=\"flex justify-between items-center border-t border-blue-200 pt-3 mt-1\">
+                        <span className=\"text-blue-800 font-bold\">Total Sanksi & Denda</span>
+                        <span className=\"font-black text-blue-700 text-lg\">{formatCurrency(totalFine)}</span>
                      </div>
                   </div>
                </div>
