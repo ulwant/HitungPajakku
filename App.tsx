@@ -14,6 +14,7 @@ import { SplashScreen } from './components/SplashScreen';
 import AboutPage from './components/AboutPage';
 import HistoryPage from './components/HistoryPage';
 import { syncRemoteToLocal } from './services/historyService';
+import { getCurrentUser } from './services/auth';
 import Auth from './components/Auth';
 
 // Type for Active Tab
@@ -41,12 +42,21 @@ const App: React.FC = () => {
 
   // Try to sync remote history into local cache on app start
   useEffect(() => {
-    try {
-      syncRemoteToLocal();
-    } catch (err) {
-      // non-fatal
-      console.warn('Initial history sync failed', err);
-    }
+    let mounted = true;
+    (async () => {
+      try {
+        // Wait for auth state to restore so we can fetch the user's remote history.
+        await getCurrentUser();
+        if (!mounted) return;
+        // Claim any local items created prior to sign-in so they become associated
+        // with the logged-in user and visible across devices.
+        try { await (await import('./services/historyService')).claimLocalHistoryForUser(); } catch (e) { /* non-fatal */ }
+        await syncRemoteToLocal();
+      } catch (err) {
+        console.warn('Initial history sync failed', err);
+      }
+    })();
+    return () => { mounted = false; };
   }, []);
 
   // Handle Scroll to Hide/Show Nav

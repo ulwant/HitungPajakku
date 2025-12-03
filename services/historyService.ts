@@ -246,3 +246,77 @@ export const stopRealtimeHistorySync = async () => {
     _realtimeSubscription = null;
   }
 };
+
+/**
+ * When a user logs in, try to claim any local-only history items by
+ * inserting/updating them with the current user's id. This helps when
+ * items were created before sign-in (user_id was not set) so they become
+ * visible across devices after login.
+ */
+export const claimLocalHistoryForUser = async () => {
+  if (!supabase) return;
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id ?? null;
+    if (!userId) return;
+
+    const local = getHistory();
+    if (!local || local.length === 0) return;
+
+    const ids = local.map(i => i.id);
+
+    // Fetch existing remote rows with these ids
+    const { data: remoteRows, error } = await supabase
+      .from('histories')
+      .select('id,user_id')
+      .in('id', ids as any[]);
+
+    if (error) {
+      console.warn('claimLocalHistoryForUser: fetch remote rows failed', error);
+      return;
+    }
+
+    const remoteMap: Record<string, any> = {};
+    (remoteRows || []).forEach((r: any) => { remoteMap[r.id] = r; });
+
+    const toInsert: any[] = [];
+    const toUpdate: any[] = [];
+
+    for (const item of local) {
+      const remote = remoteMap[item.id];
+      if (remote) {
+        // If remote exists but has no user_id, claim it by updating
+        if (!remote.user_id) {
+          toUpdate.push({ id: item.id, user_id: userId });
+        }
+        // otherwise remote already owned by someone (or this user)
+      } else {
+        // Insert new row with user_id
+        toInsert.push({
+          id: item.id,
+          user_id: userId,
+          type: item.type,
+          title: item.title,
+          summary: item.summary,
+          result_amount: item.resultAmount,
+          details: item.details || null,
+        });
+      }
+    }
+
+    if (toInsert.length > 0) {
+      const { error: insErr } = await supabase.from('histories').insert(toInsert);
+      if (insErr) console.warn('claimLocalHistoryForUser: insert failed', insErr);
+    }
+
+    if (toUpdate.length > 0) {
+      // Bulk update user_id for existing rows without user_id
+      for (const upd of toUpdate) {
+        const { error: upErr } = await supabase.from('histories').update({ user_id: upd.user_id }).eq('id', upd.id);
+        if (upErr) console.warn('claimLocalHistoryForUser: update failed for', upd.id, upErr);
+      }
+    }
+  } catch (err) {
+    console.warn('claimLocalHistoryForUser error', err);
+  }
+};
