@@ -2,19 +2,16 @@
 
 import { HistoryItem } from '../types';
 import { supabase } from './supabaseClient';
-import { getCurrentUser } from './auth'; // Import getCurrentUser untuk mendapatkan user ID
+import { getCurrentUser } from './auth'; 
 
-// Menghapus: const KEY = 'hitungpajakku_history_v1';
-// Menghapus: export const getHistory = ... (fungsi sinkronus lama)
-// Menghapus: const setLocalHistory = ...
-
-// Fungsi baru yang ASINKRONUS untuk mengambil riwayat langsung dari Supabase
+// HAPUS SEMUA: KEY, getHistory, setLocalHistory, claimLocalHistoryForUser, syncRemoteToLocal
+// Fungsi getHistoryItems yang ASINKRONUS untuk mengambil riwayat langsung dari Supabase
 export const getHistoryItems = async (userId: string | null): Promise<HistoryItem[]> => {
   if (!supabase || !userId) return [];
   try {
     const { data, error } = await supabase
       .from('histories')
-      .select('id, type, title, summary, result_amount, details, inserted_at')
+      .select('id, type, title, summary, result_amount, details, inserted_at') // Pilih kolom yang diperlukan
       .eq('user_id', userId)
       .order('inserted_at', { ascending: false })
       .limit(50);
@@ -43,19 +40,22 @@ export const getHistoryItems = async (userId: string | null): Promise<HistoryIte
 
 // Fungsi saveHistoryItem diubah menjadi ASINKRONUS dan hanya menyimpan ke Supabase
 export const saveHistoryItem = async (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
-  if (!supabase) return;
+  if (!supabase) {
+    console.warn('saveHistoryItem: Supabase client is not initialized.');
+    return null; 
+  }
 
   try {
+    // Mendapatkan user ID dari sesi saat ini
     const { data: userData, error: userError } = await supabase.auth.getUser();
     if (userError) {
-      console.warn('saveHistoryItem: Failed to get user for RLS:', userError);
-      return;
+      console.warn('saveHistoryItem: Gagal mendapatkan user untuk RLS:', userError);
+      return null;
     }
     const userId = userData?.user?.id;
     if (!userId) {
-      console.warn('saveHistoryItem: User not logged in, cannot save to Supabase.');
-      // Jika user tidak login, data tidak tersimpan sama sekali (pure Supabase-based)
-      return;
+      console.warn('saveHistoryItem: User tidak login, tidak dapat menyimpan ke Supabase.');
+      return null;
     }
 
     const newItemId = Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -68,7 +68,7 @@ export const saveHistoryItem = async (item: Omit<HistoryItem, 'id' | 'timestamp'
       summary: item.summary,
       result_amount: item.resultAmount,
       details: item.details || null,
-      metadata: null,
+      metadata: null, // Asumsi kolom metadata ada atau dihapus
     };
 
     const { error } = await supabase
@@ -77,6 +77,7 @@ export const saveHistoryItem = async (item: Omit<HistoryItem, 'id' | 'timestamp'
 
     if (error) {
       console.error('Supabase insert failed:', error);
+      return null;
     }
     
     return { 
@@ -87,10 +88,11 @@ export const saveHistoryItem = async (item: Omit<HistoryItem, 'id' | 'timestamp'
     
   } catch (err) {
     console.error('saveHistoryItem error:', err);
+    return null;
   }
 };
 
-// Fungsi deleteHistoryItem diubah menjadi ASINKRONUS dan hanya menghapus dari Supabase
+// Fungsi deleteHistoryItem diubah menjadi ASINKRONUS
 export const deleteHistoryItem = async (id: string) => {
   if (!supabase) return;
 
@@ -108,19 +110,18 @@ export const deleteHistoryItem = async (id: string) => {
   }
 };
 
-// Fungsi clearHistory diubah menjadi ASINKRONUS dan hanya menghapus data user yang login
+// Fungsi clearHistory diubah menjadi ASINKRONUS dan menghapus data user yang login
 export const clearHistory = async () => {
   if (!supabase) return;
   
   try {
-    const user = await getCurrentUser();
-    const userId = user?.id ?? null;
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData?.user?.id ?? null;
     if (!userId) {
         console.warn('clearHistory: User not logged in, cannot clear remote history.');
         return;
     }
 
-    // Delete semua histories milik user yang sedang login
     const { error } = await supabase
         .from('histories')
         .delete()
@@ -134,17 +135,15 @@ export const clearHistory = async () => {
   }
 };
 
-// Realtime subscription handling dipertahankan, namun callback-nya harus me-refetch data.
-
+// Realtime subscription handling (Membutuhkan getHistoryItems untuk refresh UI)
 let _realtimeSubscription: any = null;
 
 export const startRealtimeHistorySync = async (userId: string, onChange?: (items: HistoryItem[]) => void) => {
-  if (!supabase) return;
+  if (!supabase || !userId) return;
   
   try {
-    await stopRealtimeHistorySync(); // Hentikan yang lama
+    await stopRealtimeHistorySync(); 
 
-    // Fungsi callback diubah agar memanggil getHistoryItems untuk refetch data terbaru
     const refetchAndCallback = async () => {
         const updatedHistory = await getHistoryItems(userId);
         onChange?.(updatedHistory);
@@ -169,7 +168,6 @@ export const startRealtimeHistorySync = async (userId: string, onChange?: (items
 };
 
 export const stopRealtimeHistorySync = async () => {
-  // Logic penghentian realtime tetap sama
   try {
     if (!_realtimeSubscription) return;
     if (_realtimeSubscription.unsubscribe) {
@@ -183,6 +181,3 @@ export const stopRealtimeHistorySync = async () => {
     _realtimeSubscription = null;
   }
 };
-
-// Menghapus: claimLocalHistoryForUser (karena tidak ada lagi local storage)
-// Menghapus: syncRemoteToLocal (karena diganti getHistoryItems)
