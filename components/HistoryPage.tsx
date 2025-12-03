@@ -1,68 +1,115 @@
+// File: components/HistoryPage.tsx
+
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { getHistory, clearHistory, deleteHistoryItem, syncRemoteToLocal, startRealtimeHistorySync, stopRealtimeHistorySync } from '../services/historyService';
+// Import fungsi ASYNC yang baru
+import { getHistoryItems, clearHistory, deleteHistoryItem, startRealtimeHistorySync, stopRealtimeHistorySync } from '../services/historyService'; 
 import { HistoryItem } from '../types';
 import { formatCurrency } from '../services/taxLogic';
-import { History, Trash2, Clock, Calendar, ArrowRight, X, Printer, Check, Calculator, FileText } from './Icons';
+import { getCurrentUser } from '../services/auth'; // Import untuk mendapatkan user ID
+import { History, Trash2, Clock, X, Printer, Calculator, FileText, RefreshCw, AlertCircle, Check } from './Icons';
 
 const HistoryPage: React.FC = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [selectedItem, setSelectedItem] = useState<HistoryItem | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [userId, setUserId] = useState<string | null>(null);
 
+  // 1. Fetch data dan kelola koneksi Realtime
   useEffect(() => {
-    setHistory(getHistory());
-    // start realtime subscription so this page updates when other devices add history
     let mounted = true;
-    startRealtimeHistorySync((items) => { if (mounted) setHistory(items); }).catch(() => {});
-    return () => { mounted = false; stopRealtimeHistorySync().catch(() => {}); };
-  }, []);
+    
+    // Fungsi untuk memuat riwayat dan mengaktifkan sync
+    const loadHistoryAndSync = async () => {
+      setIsLoading(true);
+      const user = await getCurrentUser();
+      const currentUserId = user?.id ?? null;
+      
+      if (mounted) setUserId(currentUserId);
+      if (!currentUserId) {
+        if (mounted) {
+            setHistory([]); 
+            setIsLoading(false);
+        }
+        return;
+      }
+      
+      // Ambil data pertama kali
+      const initialHistory = await getHistoryItems(currentUserId);
+      if (mounted) {
+        setHistory(initialHistory);
+        setIsLoading(false);
+      }
+      
+      // Mulai sinkronisasi Realtime
+      await startRealtimeHistorySync(currentUserId, async (items) => {
+        if (mounted) setHistory(items);
+      });
+    };
 
-  // Prevent body scroll when modal is open
+    loadHistoryAndSync();
+
+    // Cleanup: hentikan sync saat keluar dan reset overflow body
+    return () => { 
+        mounted = false; 
+        stopRealtimeHistorySync().catch(() => {});
+        document.body.style.overflow = 'unset';
+    };
+  }, []); 
+
+  // Toggle body scroll saat modal dibuka
   useEffect(() => {
     if (selectedItem) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
     }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
   }, [selectedItem]);
-
-  const handleDelete = (e: React.MouseEvent | null, id: string) => {
+  
+  // Fungsi ASYNC untuk menghapus item
+  const handleDelete = async (e: React.MouseEvent | null, id: string) => {
     if (e) e.stopPropagation();
-    const updated = deleteHistoryItem(id);
-    setHistory(updated);
-    if (selectedItem?.id === id) setSelectedItem(null);
+    if (window.confirm('Apakah Anda yakin ingin menghapus riwayat ini?')) {
+        await deleteHistoryItem(id);
+        if (selectedItem?.id === id) setSelectedItem(null);
+        // Refresh data dari server
+        setHistory(await getHistoryItems(userId));
+    }
   };
 
-  const handleClearAll = () => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus semua riwayat?')) {
-      clearHistory();
+  // Fungsi ASYNC untuk menghapus semua
+  const handleClearAll = async () => {
+    if (window.confirm('Apakah Anda yakin ingin menghapus semua riwayat? Tindakan ini tidak dapat dibatalkan.')) {
+      await clearHistory();
       setHistory([]);
       setSelectedItem(null);
     }
   };
 
+  // Fungsi ASYNC untuk refresh manual
+  const handleRefresh = async () => {
+      setIsLoading(true);
+      setHistory(await getHistoryItems(userId));
+      setIsLoading(false);
+  }
+
   const formatDate = (timestamp: number) => {
     return new Intl.DateTimeFormat('id-ID', {
       day: 'numeric',
-      month: 'short', // Short month for mobile compactness
+      month: 'short', 
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     }).format(new Date(timestamp));
   };
-
-  // Helper to get color theme
+  
   const getThemeColor = (type: string) => {
      if (type === 'PPH21') return 'text-blue-600 bg-blue-100 border-blue-200';
      if (type === 'PPN') return 'text-orange-600 bg-orange-100 border-orange-200';
      if (type === 'PPNBM') return 'text-rose-600 bg-rose-100 border-rose-200';
      return 'text-purple-600 bg-purple-100 border-purple-200';
   };
-
-  // Parser for the details string to render nice UI
+  
   const renderDetailsContent = (detailsRaw: string | undefined) => {
     if (!detailsRaw) return <p className="text-slate-400 italic text-center py-4">Tidak ada rincian tambahan.</p>;
 
@@ -74,12 +121,10 @@ const HistoryPage: React.FC = () => {
           const trimmed = line.trim();
           if (!trimmed) return null;
           
-          // Check for separator
           if (trimmed.includes('----')) {
             return <div key={idx} className="h-px bg-slate-200 my-0"></div>;
           }
 
-          // Check for Key: Value pair
           const separatorIndex = trimmed.indexOf(':');
           if (separatorIndex !== -1) {
              const label = trimmed.substring(0, separatorIndex).trim();
@@ -93,7 +138,6 @@ const HistoryPage: React.FC = () => {
              );
           }
 
-          // Fallback for other text (headers etc)
           return (
             <div key={idx} className="py-2 px-4 bg-slate-50 font-bold text-slate-900 text-xs md:text-sm border-b border-slate-100">
                {trimmed}
@@ -108,33 +152,67 @@ const HistoryPage: React.FC = () => {
     <div className="max-w-4xl mx-auto space-y-6 md:space-y-8 pb-12">
       
       {/* Toolbar Actions */}
-      {history.length > 0 && (
-        <div className="flex justify-end no-print">
-           <div className="flex items-center gap-2">
-             <button onClick={async () => { await syncRemoteToLocal(); setHistory(getHistory()); }} className="hidden md:inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50">Sinkronisasi</button>
-             <button 
+      <div className="flex justify-between items-center no-print">
+         <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+            <History size={24} className="text-blue-600"/>
+            Riwayat Saya
+         </h3>
+         
+         <div className="flex items-center gap-2">
+            {/* Refresh Button */}
+            {userId && (
+                <button 
+                    onClick={handleRefresh} 
+                    className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-bold hover:bg-slate-50 disabled:opacity-50"
+                    disabled={isLoading}
+                >
+                    <RefreshCw size={16} className={isLoading ? 'animate-spin' : ''}/>
+                    {isLoading ? 'Memuat...' : 'Refresh'}
+                </button>
+            )}
+            
+            {/* Hapus Semua Button */}
+            {history.length > 0 && (
+              <button 
                 onClick={handleClearAll}
                 className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 rounded-xl transition-colors text-sm font-bold"
               >
                 <Trash2 size={16} />
                 Hapus Semua
               </button>
-           </div>
-        </div>
+            )}
+         </div>
+      </div>
+      
+      {/* Loading State */}
+      {isLoading && userId && (
+          <div className="text-center py-16 md:py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm px-4">
+              <RefreshCw size={32} className="text-blue-500 mx-auto mb-4 animate-spin"/>
+              <p className="text-sm text-slate-500">Memuat riwayat dari server Supabase...</p>
+          </div>
       )}
 
-      {/* Empty State */}
-      {history.length === 0 ? (
-        <div className="text-center py-16 md:py-20 bg-white rounded-[2rem] md:rounded-[2.5rem] border border-slate-100 shadow-sm px-4">
-          <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 md:mb-6 text-slate-300">
-            <Clock size={32} className="md:w-10 md:h-10" />
-          </div>
-          <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2">Belum ada riwayat</h3>
-          <p className="text-sm md:text-base text-slate-500">Lakukan perhitungan pajak dan klik "Simpan" untuk melihatnya disini.</p>
+      {/* Not Logged In State */}
+      {!userId && !isLoading && (
+        <div className="text-center py-16 md:py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm px-4">
+          <AlertCircle size={32} className="text-red-500 mx-auto mb-4"/>
+          <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2">Login Diperlukan</h3>
+          <p className="text-sm md:text-base text-slate-500">Riwayat Anda kini sepenuhnya disimpan di server. Silakan **Masuk** (Login) untuk melihat dan menyimpan riwayat Anda.</p>
         </div>
-      ) : (
-        <>
-          <div className="grid grid-cols-1 gap-3 md:gap-4">
+      )}
+      
+      {/* Empty State */}
+      {history.length === 0 && !isLoading && userId && (
+        <div className="text-center py-16 md:py-20 bg-white rounded-[2rem] border border-slate-100 shadow-sm px-4">
+          <Clock size={32} className="text-slate-300 mx-auto mb-4" />
+          <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-2">Belum ada riwayat</h3>
+          <p className="text-sm md:text-base text-slate-500">Lakukan perhitungan pajak dan klik "Simpan" (Save) untuk melihatnya disini.</p>
+        </div>
+      )}
+      
+      {/* List Riwayat */}
+      {history.length > 0 && !isLoading && (
+         <div className="grid grid-cols-1 gap-3 md:gap-4">
             {history.map((item) => (
               <div 
                 key={item.id}
@@ -175,57 +253,9 @@ const HistoryPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </>
-      )}
-       
-       {/* Mobile Delete All */}
-       {history.length > 0 && (
-         <div className="md:hidden flex justify-center mt-6 no-print">
-            <button 
-              onClick={handleClearAll}
-              className="flex items-center gap-2 px-6 py-3.5 bg-red-50 text-red-600 rounded-xl font-bold w-full justify-center text-sm border border-red-100"
-            >
-              <Trash2 size={16} />
-              Hapus Semua Riwayat
-            </button>
-         </div>
        )}
 
-       {/* Print All Button */}
-       {history.length > 0 && (
-          <div className="flex justify-center mt-6 md:mt-8 no-print">
-             <button onClick={() => window.print()} className="flex items-center gap-2 text-slate-400 hover:text-slate-900 font-bold text-xs md:text-sm transition-colors">
-                <Printer size={16} /> Cetak Laporan Lengkap
-             </button>
-          </div>
-       )}
-
-       {/* PRINTABLE TABLE VIEW (Main Page Print) */}
-       <div className="print-only hidden">
-          <h2 className="text-2xl font-bold mb-4">Laporan Riwayat Perhitungan</h2>
-          <table className="w-full text-left border-collapse">
-             <thead>
-                <tr className="border-b-2 border-black">
-                   <th className="py-2">Tanggal</th>
-                   <th className="py-2">Jenis</th>
-                   <th className="py-2">Keterangan</th>
-                   <th className="py-2 text-right">Nominal</th>
-                </tr>
-             </thead>
-             <tbody>
-                {history.map(item => (
-                   <tr key={item.id} className="border-b border-slate-200">
-                      <td className="py-2">{new Date(item.timestamp).toLocaleDateString()}</td>
-                      <td className="py-2">{item.title}</td>
-                      <td className="py-2 text-xs">{item.summary}</td>
-                      <td className="py-2 text-right font-bold">{formatCurrency(item.resultAmount)}</td>
-                   </tr>
-                ))}
-             </tbody>
-          </table>
-       </div>
-
-       {/* DOCUMENT DETAIL MODAL */}
+       {/* Sisa kode modal, dll. */ }
        {selectedItem && createPortal(
           <div className="fixed inset-0 z-[100] flex items-start justify-center py-4 sm:py-8 px-4 animate-enter modal-container overflow-y-auto bg-slate-900/60 backdrop-blur-sm">
              
