@@ -98,7 +98,7 @@ const App: React.FC = () => {
 
   // --- LOGIKA UTAMA ROLLED DOWN MENU ---
   // Kita set 4 atau 5 tab utama agar muat di layar
-  const MAX_MAIN_TABS = 5; 
+  const MAX_MAIN_TABS = 4; 
   const mainTabs = tabs.slice(0, MAX_MAIN_TABS);
   const overflowTabs = tabs.slice(MAX_MAIN_TABS);
 
@@ -161,9 +161,10 @@ const App: React.FC = () => {
             </div>
 
             {/* Middle: Desktop Tabs (Fixed Logic) */}
-            <div className="hidden md:flex flex-1 justify-center min-w-0 px-2 relative z-10">
+            <div className="hidden md:flex flex-1 justify-center px-2 overflow-visible relative z-10">
               {/* Kapsul Menu */}
-              <div className="bg-slate-400/10 rounded-full p-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] flex items-center gap-1 backdrop-blur-md overflow-visible">
+              <div className="bg-slate-400/10 rounded-full pl-1.5 pr-3 py-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] flex items-center gap-1.5 backdrop-blur-md overflow-visible w-fit leading-none">
+
                 
                 {/* Render 5 Tab Utama */}
                 {mainTabs.map((tab) => (
