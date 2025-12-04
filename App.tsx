@@ -3,7 +3,7 @@ import {
   Menu, X, ChevronRight, ChevronDown, 
   Briefcase, Banknote, Ship, PenTool, Siren, Building2, Gem, History as HistoryIcon 
 } from './components/Icons';
-// NextPrevScroller bisa dihapus jika tidak digunakan lagi di tempat lain
+// NextPrevScroller tidak digunakan untuk menu utama, bisa dihapus atau dibiarkan jika dipakai di mobile
 import NextPrevScroller from './components/NextPrevScroller'; 
 
 import CalculatorPPH21 from './components/CalculatorPPH21';
@@ -87,6 +87,7 @@ const App: React.FC = () => {
     { id: 'PPH21', label: 'PPh 21', fullLabel: 'Karyawan & Pribadi', icon: <Briefcase size={18} /> },
     { id: 'NPPN', label: 'Freelancer', fullLabel: 'Pekerja Bebas', icon: <PenTool size={18} /> },
     { id: 'SANKSI', label: 'Sanksi', fullLabel: 'Hitung Denda Telat', icon: <Siren size={18} /> },
+    // Item di bawah ini akan masuk ke menu Overflow "Lainnya"
     { id: 'HISTORY', label: 'Riwayat', fullLabel: 'Riwayat Hitungan', icon: <HistoryIcon size={18} /> },
     { id: 'PPH23', label: 'PPh 23', fullLabel: 'Jasa & Royalti', icon: <Building2 size={18} /> },
     { id: 'FINAL', label: 'PPh Final', fullLabel: 'Sewa & UMKM', icon: <Banknote size={18} /> },
@@ -96,8 +97,8 @@ const App: React.FC = () => {
   ];
 
   // --- LOGIKA UTAMA ROLLED DOWN MENU ---
-  // Ubah MAX_MAIN_TABS menjadi 4 agar tidak menabrak form login
-  const MAX_MAIN_TABS = 4; 
+  // Ubah MAX_MAIN_TABS menjadi 3 agar hanya menampilkan: PPh 21, Freelancer, Sanksi + Tombol Lainnya
+  const MAX_MAIN_TABS = 3; 
   const mainTabs = tabs.slice(0, MAX_MAIN_TABS);
   const overflowTabs = tabs.slice(MAX_MAIN_TABS);
 
@@ -147,8 +148,8 @@ const App: React.FC = () => {
         {/* Floating Navigation */}
         <div className={`fixed top-6 left-0 right-0 z-50 flex justify-center px-4 no-print transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${showNav ? 'translate-y-0' : '-translate-y-32'}`}>
 
-          {/* Navigation Bar Container - Menggunakan max-w-full untuk layar lebar agar muat */}
-          <nav className="relative flex items-center justify-between p-1.5 gap-2 md:gap-4 w-full max-w-[95%] lg:max-w-7xl rounded-[2rem] border border-white/40 bg-white/30 backdrop-blur-3xl backdrop-saturate-150 shadow-2xl shadow-blue-900/10 ring-1 ring-white/40 ring-inset">
+          {/* Navigation Bar Container */}
+          <nav className="relative flex items-center justify-between p-1.5 gap-2 md:gap-4 w-full max-w-7xl rounded-[2rem] border border-white/40 bg-white/30 backdrop-blur-3xl backdrop-saturate-150 shadow-2xl shadow-blue-900/10 ring-1 ring-white/40 ring-inset">
 
             {/* Brand - Left */}
             <div className="flex-shrink-0 cursor-pointer select-none group pl-3 md:pl-4 relative z-10" onClick={() => setActiveTab('ABOUT')}>
@@ -164,12 +165,12 @@ const App: React.FC = () => {
               {/* Kapsul Menu */}
               <div className="bg-slate-400/10 rounded-full p-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] flex items-center gap-1 backdrop-blur-md overflow-visible">
                 
-                {/* Render 4 Tab Utama */}
+                {/* Render 3 Tab Utama: PPh21, Freelancer, Sanksi */}
                 {mainTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as Tab)}
-                    className={`relative h-9 px-3 rounded-full text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 leading-none ${activeTab === tab.id
+                    className={`relative h-9 px-3 lg:px-4 rounded-full text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 leading-none ${activeTab === tab.id
                       ? 'text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4)] shadow-md'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                       }`}
@@ -179,8 +180,8 @@ const App: React.FC = () => {
                     )}
                     <span className="shrink-0 relative z-10 drop-shadow-sm">{tab.icon}</span>
                     <span className="relative z-10 drop-shadow-sm pt-0.5 hidden lg:inline">{tab.label}</span>
-                    {/* Tampilkan label hanya di LG ke atas, ikon saja di MD agar muat */}
-                    <span className="relative z-10 drop-shadow-sm pt-0.5 lg:hidden">{tab.label.substring(0,3)}</span>
+                    {/* Tampilkan label disingkat di MD agar muat, full di LG */}
+                    <span className="relative z-10 drop-shadow-sm pt-0.5 lg:hidden">{tab.label.substring(0,3)}..</span>
                   </button>
                 ))}
 
@@ -195,7 +196,7 @@ const App: React.FC = () => {
                           : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                         }`}
                     >
-                      <span className="relative z-10 drop-shadow-sm">...</span>
+                      <span className="relative z-10 drop-shadow-sm">... Lainnya</span>
                       <ChevronDown size={14} className={`transition-transform duration-300 ${showOverflow ? 'rotate-180' : 'rotate-0'}`} />
                     </button>
 
