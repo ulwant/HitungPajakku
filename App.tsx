@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Menu, X, ChevronRight, ChevronDown, // Menambahkan ChevronDown
+  Menu, X, ChevronRight, ChevronDown, 
   Briefcase, Banknote, Ship, PenTool, Siren, Building2, Gem, History as HistoryIcon 
 } from './components/Icons';
-// NextPrevScroller tidak lagi dibutuhkan untuk menu utama desktop, tapi mungkin masih dipakai di mobile atau tempat lain jika ada. 
-// Jika tidak dipakai lagi, line ini bisa dihapus.
+// NextPrevScroller bisa dihapus jika tidak digunakan lagi di tempat lain, 
+// tapi saya biarkan di import jaga-jaga kalau Anda mau pakai di mobile nanti.
 import NextPrevScroller from './components/NextPrevScroller'; 
 
 import CalculatorPPH21 from './components/CalculatorPPH21';
@@ -26,27 +26,27 @@ import Auth from './components/Auth';
 type Tab = 'PPH21' | 'PPH23' | 'FINAL' | 'PPNBM' | 'BEACUKAI' | 'NPPN' | 'SANKSI' | 'PPN' | 'HISTORY' | 'ABOUT';
 
 const App: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(true); // Splash Screen State
+  const [isLoading, setIsLoading] = useState(true); 
   const [activeTab, setActiveTab] = useState<Tab>('PPH21');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contextData, setContextData] = useState<string>('');
   const [showNav, setShowNav] = useState(true);
   
-  // State baru untuk dropdown menu
+  // State untuk kontrol menu Dropdown
   const [showOverflow, setShowOverflow] = useState(false);
 
   // Lock Body Scroll when Mobile Menu is Open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
-      setShowNav(true);
+      setShowNav(true); 
     } else {
       document.body.style.overflow = 'unset';
     }
     return () => { document.body.style.overflow = 'unset'; };
   }, [mobileMenuOpen]);
 
-  // Try to sync remote history into local cache on app start
+  // Sync History
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -65,46 +65,40 @@ const App: React.FC = () => {
   // Handle Scroll to Hide/Show Nav
   useEffect(() => {
     let lastScrollY = window.scrollY;
-
     const handleScroll = () => {
       if (mobileMenuOpen) {
         setShowNav(true);
         return;
       }
-
       const currentScrollY = window.scrollY;
-
       if (currentScrollY < 20) {
         setShowNav(true);
-      }
-      else if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      } else if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setShowNav(false);
-      }
-      else if (currentScrollY < lastScrollY) {
+      } else if (currentScrollY < lastScrollY) {
         setShowNav(true);
       }
-
       lastScrollY = currentScrollY;
     };
-
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [mobileMenuOpen]);
 
   const tabs = [
     { id: 'PPH21', label: 'PPh 21', fullLabel: 'Karyawan & Pribadi', icon: <Briefcase size={18} /> },
-    { id: 'NPPN', label: 'Freelancer', fullLabel: 'Pekerja Bebas (Norma)', icon: <PenTool size={18} /> },
+    { id: 'NPPN', label: 'Freelancer', fullLabel: 'Pekerja Bebas', icon: <PenTool size={18} /> },
     { id: 'SANKSI', label: 'Sanksi', fullLabel: 'Hitung Denda Telat', icon: <Siren size={18} /> },
-    { id: 'HISTORY', label: 'Riwayat', fullLabel: 'Riwayat Perhitungan', icon: <HistoryIcon size={18} /> },
-    { id: 'PPH23', label: 'PPh 23', fullLabel: 'Jasa, Dividen, Royalti', icon: <Building2 size={18} /> },
-    { id: 'FINAL', label: 'PPh Final', fullLabel: 'Sewa Tanah & UMKM', icon: <Banknote size={18} /> },
-    { id: 'PPNBM', label: 'PPNBM', fullLabel: 'Pajak Barang Mewah', icon: <Gem size={18} /> },
-    { id: 'BEACUKAI', label: 'Bea Cukai', fullLabel: 'Impor & Barang Kiriman', icon: <Ship size={18} /> },
-    { id: 'PPN', label: 'PPN', fullLabel: 'Pajak Pertambahan Nilai', icon: <Briefcase size={18} /> },
+    { id: 'HISTORY', label: 'Riwayat', fullLabel: 'Riwayat Hitungan', icon: <HistoryIcon size={18} /> },
+    { id: 'PPH23', label: 'PPh 23', fullLabel: 'Jasa & Royalti', icon: <Building2 size={18} /> },
+    { id: 'FINAL', label: 'PPh Final', fullLabel: 'Sewa & UMKM', icon: <Banknote size={18} /> },
+    { id: 'PPNBM', label: 'PPNBM', fullLabel: 'Barang Mewah', icon: <Gem size={18} /> },
+    { id: 'BEACUKAI', label: 'Bea Cukai', fullLabel: 'Impor Barang', icon: <Ship size={18} /> },
+    { id: 'PPN', label: 'PPN', fullLabel: 'Pertambahan Nilai', icon: <Briefcase size={18} /> },
   ];
 
-  // LOGIKA BARU: Membagi Tab menjadi Utama dan Overflow
-  const MAX_MAIN_TABS = 5;
+  // --- LOGIKA UTAMA ROLLED DOWN MENU ---
+  // Kita set 4 atau 5 tab utama agar muat di layar
+  const MAX_MAIN_TABS = 5; 
   const mainTabs = tabs.slice(0, MAX_MAIN_TABS);
   const overflowTabs = tabs.slice(MAX_MAIN_TABS);
 
@@ -126,16 +120,13 @@ const App: React.FC = () => {
           } group relative overflow-hidden`}
       >
         {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500"></div>}
-
         <div className={`p-2.5 rounded-xl shrink-0 transition-colors ${isActive ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500 group-hover:bg-white group-hover:text-blue-500 group-hover:shadow-sm'}`}>
           {icon}
         </div>
-
         <div className="flex flex-col">
           <span className={`font-bold text-sm ${isActive ? 'text-blue-900' : 'text-slate-700'}`}>{label}</span>
           <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide">{subLabel}</span>
         </div>
-
         {isActive && <ChevronRight size={16} className="ml-auto text-blue-500" />}
       </button>
     );
@@ -154,11 +145,11 @@ const App: React.FC = () => {
           <div className="absolute bottom-[-20%] left-[20%] w-96 h-96 bg-slate-200/40 rounded-full mix-blend-multiply filter blur-3xl animate-blob animation-delay-4000"></div>
         </div>
 
-        {/* Floating Navigation (Liquid Glass Design) */}
+        {/* Floating Navigation */}
         <div className={`fixed top-6 left-0 right-0 z-50 flex justify-center px-4 no-print transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${showNav ? 'translate-y-0' : '-translate-y-32'}`}>
 
-          {/* The Crystal Bar */}
-          <nav className="relative flex items-center justify-between p-1.5 gap-3 md:gap-6 max-w-6xl w-full rounded-[2rem] border border-white/40 bg-white/30 backdrop-blur-3xl backdrop-saturate-150 shadow-2xl shadow-blue-900/10 ring-1 ring-white/40 ring-inset">
+          {/* Navigation Bar Container */}
+          <nav className="relative flex items-center justify-between p-1.5 gap-2 md:gap-4 max-w-7xl w-full rounded-[2rem] border border-white/40 bg-white/30 backdrop-blur-3xl backdrop-saturate-150 shadow-2xl shadow-blue-900/10 ring-1 ring-white/40 ring-inset">
 
             {/* Brand - Left */}
             <div className="flex-shrink-0 cursor-pointer select-none group pl-4 relative z-10" onClick={() => setActiveTab('ABOUT')}>
@@ -169,49 +160,51 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Desktop Tabs - The Overflow Channel (IMPLEMENTASI BARU) */}
+            {/* Middle: Desktop Tabs (Fixed Logic) */}
             <div className="hidden md:flex flex-1 justify-center min-w-0 px-2 relative z-10">
-              <div className="bg-slate-400/10 rounded-full p-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] max-w-full gap-1 flex items-center backdrop-blur-md">
+              {/* Kapsul Menu */}
+              <div className="bg-slate-400/10 rounded-full p-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] flex items-center gap-1 backdrop-blur-md overflow-visible">
                 
-                {/* 1. Main Tabs (5 items pertama) */}
+                {/* Render 5 Tab Utama */}
                 {mainTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as Tab)}
-                    className={`relative h-10 px-4 rounded-full text-xs md:text-sm font-bold transition-all duration-500 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 leading-none ${activeTab === tab.id
-                      ? 'text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4)] shadow-[0_4px_12px_rgba(59,130,246,0.4)]'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/40 shadow-[inset_0_1px_0_0_transparent]'
+                    className={`relative h-9 px-3 lg:px-4 rounded-full text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 leading-none ${activeTab === tab.id
+                      ? 'text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4)] shadow-md'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                       }`}
                   >
                     {activeTab === tab.id && (
-                      <div className="absolute inset-0 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full -z-10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]"></div>
+                      <div className="absolute inset-0 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full -z-10"></div>
                     )}
-
                     <span className="shrink-0 relative z-10 drop-shadow-sm">{tab.icon}</span>
                     <span className="relative z-10 drop-shadow-sm pt-0.5">{tab.label}</span>
                   </button>
                 ))}
 
-                {/* 2. Overflow Menu Button (Tombol ... Lainnya) */}
+                {/* Tombol Rolldown (... Lainnya) */}
                 {overflowTabs.length > 0 && (
                   <div className="relative">
                     <button
                       onClick={() => setShowOverflow(!showOverflow)}
-                      className={`relative h-10 px-4 rounded-full text-xs md:text-sm font-bold transition-all duration-500 flex items-center justify-center gap-1 whitespace-nowrap shrink-0 leading-none ${showOverflow || overflowTabs.some(t => t.id === activeTab)
-                        ? 'bg-white text-blue-700 shadow-sm border border-slate-200'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/40 shadow-[inset_0_1px_0_0_transparent]'
+                      className={`relative h-9 px-3 rounded-full text-xs font-bold transition-all duration-300 flex items-center justify-center gap-1 whitespace-nowrap shrink-0 leading-none 
+                        ${showOverflow || overflowTabs.some(t => t.id === activeTab)
+                          ? 'bg-white text-blue-700 shadow-sm border border-slate-200'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                         }`}
                     >
                       <span className="relative z-10 drop-shadow-sm">... Lainnya</span>
                       <ChevronDown size={14} className={`transition-transform duration-300 ${showOverflow ? 'rotate-180' : 'rotate-0'}`} />
                     </button>
 
-                    {/* Overflow Dropdown Content */}
+                    {/* Isi Dropdown Menu */}
                     {showOverflow && (
                       <div 
-                        className="absolute right-0 top-full mt-3 w-60 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-20 animate-enter origin-top-right"
+                        className="absolute right-0 top-full mt-3 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 p-2 z-50 animate-fade-up origin-top-right ring-1 ring-black/5"
                         onMouseLeave={() => setShowOverflow(false)}
                       >
+                        <div className="px-3 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Kalkulator Lainnya</div>
                         {overflowTabs.map((tab) => (
                           <button
                             key={tab.id}
@@ -219,17 +212,17 @@ const App: React.FC = () => {
                               setActiveTab(tab.id as Tab);
                               setShowOverflow(false);
                             }}
-                            className={`w-full text-left flex items-center gap-3 p-3 rounded-lg text-xs font-bold transition-all ${activeTab === tab.id
+                            className={`w-full text-left flex items-center gap-3 p-2.5 rounded-xl text-xs font-bold transition-all mb-1 last:mb-0 ${activeTab === tab.id
                               ? 'bg-blue-50 text-blue-700'
                               : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                               }`}
                           >
-                            <div className={`p-1.5 rounded-md shrink-0 ${activeTab === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
+                            <div className={`p-1.5 rounded-lg shrink-0 ${activeTab === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
                               {tab.icon}
                             </div>
                             <div className="flex flex-col">
                               <span>{tab.label}</span>
-                              <span className="text-[9px] font-normal text-slate-400 opacity-80 truncate max-w-[140px]">{tab.fullLabel}</span>
+                              <span className="text-[9px] font-normal text-slate-400 opacity-80">{tab.fullLabel}</span>
                             </div>
                           </button>
                         ))}
@@ -254,7 +247,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Right Action - Auth (desktop) */}
-            <div className="hidden md:flex items-center gap-3 pr-4">
+            <div className="hidden md:flex items-center gap-3 pr-4 flex-shrink-0">
               <Auth />
             </div>
           </nav>
@@ -330,14 +323,9 @@ const App: React.FC = () => {
         <footer className="relative z-10 mt-8 pb-8 px-4 no-print">
           <div className="max-w-6xl mx-auto">
             <div className="relative overflow-hidden rounded-3xl border border-white/40 bg-gradient-to-br from-white/40 via-white/30 to-white/20 backdrop-blur-3xl backdrop-saturate-150 shadow-xl shadow-blue-900/10 ring-1 ring-white/40 ring-inset p-6">
-
-              {/* Decorative gradient orbs */}
               <div className="absolute top-0 right-0 w-24 h-24 bg-blue-400/20 rounded-full blur-3xl"></div>
               <div className="absolute bottom-0 left-0 w-24 h-24 bg-cyan-400/20 rounded-full blur-3xl"></div>
-
               <div className="relative flex flex-col md:flex-row items-center justify-between gap-4">
-
-                {/* Left section - Branding & Copyright */}
                 <div className="flex flex-col items-center md:items-start gap-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-black tracking-tight bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
@@ -351,7 +339,6 @@ const App: React.FC = () => {
                     © {new Date().getFullYear()} HitungPajakku
                   </p>
                 </div>
-
               </div>
             </div>
           </div>
