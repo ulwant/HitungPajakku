@@ -3,8 +3,7 @@ import {
   Menu, X, ChevronRight, ChevronDown, 
   Briefcase, Banknote, Ship, PenTool, Siren, Building2, Gem, History as HistoryIcon 
 } from './components/Icons';
-// NextPrevScroller bisa dihapus jika tidak digunakan lagi di tempat lain, 
-// tapi saya biarkan di import jaga-jaga kalau Anda mau pakai di mobile nanti.
+// NextPrevScroller bisa dihapus jika tidak digunakan lagi di tempat lain
 import NextPrevScroller from './components/NextPrevScroller'; 
 
 import CalculatorPPH21 from './components/CalculatorPPH21';
@@ -97,7 +96,7 @@ const App: React.FC = () => {
   ];
 
   // --- LOGIKA UTAMA ROLLED DOWN MENU ---
-  // Kita set 4 atau 5 tab utama agar muat di layar
+  // Ubah MAX_MAIN_TABS menjadi 4 agar tidak menabrak form login
   const MAX_MAIN_TABS = 4; 
   const mainTabs = tabs.slice(0, MAX_MAIN_TABS);
   const overflowTabs = tabs.slice(MAX_MAIN_TABS);
@@ -148,30 +147,29 @@ const App: React.FC = () => {
         {/* Floating Navigation */}
         <div className={`fixed top-6 left-0 right-0 z-50 flex justify-center px-4 no-print transition-all duration-700 ease-[cubic-bezier(0.2,0.8,0.2,1)] ${showNav ? 'translate-y-0' : '-translate-y-32'}`}>
 
-          {/* Navigation Bar Container */}
-          <nav className="relative flex items-center justify-between p-1.5 gap-2 md:gap-4 max-w-7xl w-full rounded-[2rem] border border-white/40 bg-white/30 backdrop-blur-3xl backdrop-saturate-150 shadow-2xl shadow-blue-900/10 ring-1 ring-white/40 ring-inset">
+          {/* Navigation Bar Container - Menggunakan max-w-full untuk layar lebar agar muat */}
+          <nav className="relative flex items-center justify-between p-1.5 gap-2 md:gap-4 w-full max-w-[95%] lg:max-w-7xl rounded-[2rem] border border-white/40 bg-white/30 backdrop-blur-3xl backdrop-saturate-150 shadow-2xl shadow-blue-900/10 ring-1 ring-white/40 ring-inset">
 
             {/* Brand - Left */}
-            <div className="flex-shrink-0 cursor-pointer select-none group pl-4 relative z-10" onClick={() => setActiveTab('ABOUT')}>
+            <div className="flex-shrink-0 cursor-pointer select-none group pl-3 md:pl-4 relative z-10" onClick={() => setActiveTab('ABOUT')}>
               <div className="flex items-center gap-2">
-                <span className="text-base md:text-lg font-black tracking-tight text-slate-800 group-hover:opacity-80 transition-opacity">
+                <span className="text-base md:text-lg font-black tracking-tight text-slate-800 group-hover:opacity-80 transition-opacity whitespace-nowrap">
                   HitungPajakku
                 </span>
               </div>
             </div>
 
-            {/* Middle: Desktop Tabs (Fixed Logic) */}
-            <div className="hidden md:flex flex-1 justify-center px-2 overflow-visible relative z-10">
+            {/* Middle: Desktop Tabs */}
+            <div className="hidden md:flex flex-1 justify-center min-w-0 px-2 relative z-10">
               {/* Kapsul Menu */}
-              <div className="bg-slate-400/10 rounded-full pl-1.5 pr-3 py-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] flex items-center gap-1.5 backdrop-blur-md overflow-visible w-fit leading-none">
-
+              <div className="bg-slate-400/10 rounded-full p-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] flex items-center gap-1 backdrop-blur-md overflow-visible">
                 
-                {/* Render 5 Tab Utama */}
+                {/* Render 4 Tab Utama */}
                 {mainTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as Tab)}
-                    className={`relative h-9 px-3 lg:px-4 rounded-full text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 leading-none ${activeTab === tab.id
+                    className={`relative h-9 px-3 rounded-full text-xs font-bold transition-all duration-300 flex items-center justify-center gap-2 whitespace-nowrap shrink-0 leading-none ${activeTab === tab.id
                       ? 'text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.4)] shadow-md'
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                       }`}
@@ -180,7 +178,9 @@ const App: React.FC = () => {
                       <div className="absolute inset-0 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full -z-10"></div>
                     )}
                     <span className="shrink-0 relative z-10 drop-shadow-sm">{tab.icon}</span>
-                    <span className="relative z-10 drop-shadow-sm pt-0.5">{tab.label}</span>
+                    <span className="relative z-10 drop-shadow-sm pt-0.5 hidden lg:inline">{tab.label}</span>
+                    {/* Tampilkan label hanya di LG ke atas, ikon saja di MD agar muat */}
+                    <span className="relative z-10 drop-shadow-sm pt-0.5 lg:hidden">{tab.label.substring(0,3)}</span>
                   </button>
                 ))}
 
@@ -195,7 +195,7 @@ const App: React.FC = () => {
                           : 'text-slate-600 hover:text-slate-900 hover:bg-white/40'
                         }`}
                     >
-                      <span className="relative z-10 drop-shadow-sm">... Lainnya</span>
+                      <span className="relative z-10 drop-shadow-sm">...</span>
                       <ChevronDown size={14} className={`transition-transform duration-300 ${showOverflow ? 'rotate-180' : 'rotate-0'}`} />
                     </button>
 
@@ -248,7 +248,7 @@ const App: React.FC = () => {
             </div>
 
             {/* Right Action - Auth (desktop) */}
-            <div className="hidden md:flex items-center gap-3 pr-4 flex-shrink-0">
+            <div className="hidden md:flex items-center gap-3 pr-2 flex-shrink-0">
               <Auth />
             </div>
           </nav>
