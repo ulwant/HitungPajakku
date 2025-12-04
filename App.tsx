@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ChevronRight, Briefcase, Banknote, Ship, PenTool, Siren, Building2, Gem, History as HistoryIcon } from './components/Icons';
-import NextPrevScroller from './components/NextPrevScroller';
+import { 
+  Menu, X, ChevronRight, ChevronDown, // Menambahkan ChevronDown
+  Briefcase, Banknote, Ship, PenTool, Siren, Building2, Gem, History as HistoryIcon 
+} from './components/Icons';
+// NextPrevScroller tidak lagi dibutuhkan untuk menu utama desktop, tapi mungkin masih dipakai di mobile atau tempat lain jika ada. 
+// Jika tidak dipakai lagi, line ini bisa dihapus.
+import NextPrevScroller from './components/NextPrevScroller'; 
+
 import CalculatorPPH21 from './components/CalculatorPPH21';
 import CalculatorPPH23 from './components/CalculatorPPH23';
 import CalculatorFinal from './components/CalculatorFinal';
@@ -9,7 +15,6 @@ import CalculatorPPNBM from './components/CalculatorPPNBM';
 import CalculatorBeaCukai from './components/CalculatorBeaCukai';
 import CalculatorNPPN from './components/CalculatorNPPN';
 import CalculatorSanksi from './components/CalculatorSanksi';
-// AIWidget import removed (AI features disabled)
 import { SplashScreen } from './components/SplashScreen';
 import AboutPage from './components/AboutPage';
 import HistoryPage from './components/HistoryPage';
@@ -26,14 +31,15 @@ const App: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [contextData, setContextData] = useState<string>('');
   const [showNav, setShowNav] = useState(true);
-
-  // Note: Safety timeout removed - Turnstile verification now controls the splash screen flow
+  
+  // State baru untuk dropdown menu
+  const [showOverflow, setShowOverflow] = useState(false);
 
   // Lock Body Scroll when Mobile Menu is Open
   useEffect(() => {
     if (mobileMenuOpen) {
       document.body.style.overflow = 'hidden';
-      setShowNav(true); // Force nav to show when menu opens
+      setShowNav(true);
     } else {
       document.body.style.overflow = 'unset';
     }
@@ -45,11 +51,8 @@ const App: React.FC = () => {
     let mounted = true;
     (async () => {
       try {
-        // Wait for auth state to restore so we can fetch the user's remote history.
         await getCurrentUser();
         if (!mounted) return;
-        // Claim any local items created prior to sign-in so they become associated
-        // with the logged-in user and visible across devices.
         try { await (await import('./services/historyService')).claimLocalHistoryForUser(); } catch (e) { /* non-fatal */ }
         await syncRemoteToLocal();
       } catch (err) {
@@ -64,8 +67,6 @@ const App: React.FC = () => {
     let lastScrollY = window.scrollY;
 
     const handleScroll = () => {
-      // CRITICAL FIX: If mobile menu is open, strictly ignore scroll events
-      // This prevents the navbar from hiding while the user scrolls the menu content
       if (mobileMenuOpen) {
         setShowNav(true);
         return;
@@ -73,15 +74,12 @@ const App: React.FC = () => {
 
       const currentScrollY = window.scrollY;
 
-      // Always show at the very top
       if (currentScrollY < 20) {
         setShowNav(true);
       }
-      // Hide when scrolling down and past threshold
       else if (currentScrollY > lastScrollY && currentScrollY > 100) {
         setShowNav(false);
       }
-      // Show when scrolling up
       else if (currentScrollY < lastScrollY) {
         setShowNav(true);
       }
@@ -104,6 +102,11 @@ const App: React.FC = () => {
     { id: 'BEACUKAI', label: 'Bea Cukai', fullLabel: 'Impor & Barang Kiriman', icon: <Ship size={18} /> },
     { id: 'PPN', label: 'PPN', fullLabel: 'Pajak Pertambahan Nilai', icon: <Briefcase size={18} /> },
   ];
+
+  // LOGIKA BARU: Membagi Tab menjadi Utama dan Overflow
+  const MAX_MAIN_TABS = 5;
+  const mainTabs = tabs.slice(0, MAX_MAIN_TABS);
+  const overflowTabs = tabs.slice(MAX_MAIN_TABS);
 
   const renderMobileMenuItem = (id: Tab, label: string, subLabel: string, icon: React.ReactNode, delayIndex: number) => {
     const isActive = activeTab === id;
@@ -166,10 +169,12 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Desktop Tabs - The Liquid Channel */}
+            {/* Desktop Tabs - The Overflow Channel (IMPLEMENTASI BARU) */}
             <div className="hidden md:flex flex-1 justify-center min-w-0 px-2 relative z-10">
-              <NextPrevScroller className="bg-slate-400/10 rounded-full p-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] max-w-full gap-1 backdrop-blur-md">
-                {tabs.map((tab) => (
+              <div className="bg-slate-400/10 rounded-full p-1.5 border border-white/10 shadow-[inset_0_2px_6px_rgba(0,0,0,0.06)] max-w-full gap-1 flex items-center backdrop-blur-md">
+                
+                {/* 1. Main Tabs (5 items pertama) */}
+                {mainTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as Tab)}
@@ -178,7 +183,6 @@ const App: React.FC = () => {
                       : 'text-slate-600 hover:text-slate-900 hover:bg-white/40 shadow-[inset_0_1px_0_0_transparent]'
                       }`}
                   >
-                    {/* Active Tab Liquid Background */}
                     {activeTab === tab.id && (
                       <div className="absolute inset-0 bg-gradient-to-b from-blue-500 to-blue-600 rounded-full -z-10 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.1)]"></div>
                     )}
@@ -187,7 +191,53 @@ const App: React.FC = () => {
                     <span className="relative z-10 drop-shadow-sm pt-0.5">{tab.label}</span>
                   </button>
                 ))}
-              </NextPrevScroller>
+
+                {/* 2. Overflow Menu Button (Tombol ... Lainnya) */}
+                {overflowTabs.length > 0 && (
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowOverflow(!showOverflow)}
+                      className={`relative h-10 px-4 rounded-full text-xs md:text-sm font-bold transition-all duration-500 flex items-center justify-center gap-1 whitespace-nowrap shrink-0 leading-none ${showOverflow || overflowTabs.some(t => t.id === activeTab)
+                        ? 'bg-white text-blue-700 shadow-sm border border-slate-200'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-white/40 shadow-[inset_0_1px_0_0_transparent]'
+                        }`}
+                    >
+                      <span className="relative z-10 drop-shadow-sm">... Lainnya</span>
+                      <ChevronDown size={14} className={`transition-transform duration-300 ${showOverflow ? 'rotate-180' : 'rotate-0'}`} />
+                    </button>
+
+                    {/* Overflow Dropdown Content */}
+                    {showOverflow && (
+                      <div 
+                        className="absolute right-0 top-full mt-3 w-60 bg-white rounded-xl shadow-xl border border-slate-100 p-2 z-20 animate-enter origin-top-right"
+                        onMouseLeave={() => setShowOverflow(false)}
+                      >
+                        {overflowTabs.map((tab) => (
+                          <button
+                            key={tab.id}
+                            onClick={() => {
+                              setActiveTab(tab.id as Tab);
+                              setShowOverflow(false);
+                            }}
+                            className={`w-full text-left flex items-center gap-3 p-3 rounded-lg text-xs font-bold transition-all ${activeTab === tab.id
+                              ? 'bg-blue-50 text-blue-700'
+                              : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                              }`}
+                          >
+                            <div className={`p-1.5 rounded-md shrink-0 ${activeTab === tab.id ? 'bg-blue-100 text-blue-600' : 'bg-slate-100 text-slate-500'}`}>
+                              {tab.icon}
+                            </div>
+                            <div className="flex flex-col">
+                              <span>{tab.label}</span>
+                              <span className="text-[9px] font-normal text-slate-400 opacity-80 truncate max-w-[140px]">{tab.fullLabel}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Mobile Menu Toggle */}
@@ -212,7 +262,6 @@ const App: React.FC = () => {
 
         {/* MOBILE FULLSCREEN MENU OVERLAY */}
         <div className={`fixed inset-0 z-40 bg-white/95 backdrop-blur-3xl transition-all duration-500 md:hidden ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-          {/* Inner scroll container - Pt-32 ensures content starts below floating nav */}
           <div className="h-[100dvh] overflow-y-auto pt-32 pb-40 px-6 overscroll-contain">
             <div className="max-w-md mx-auto space-y-6">
               <div>
@@ -222,7 +271,6 @@ const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Mobile auth controls */}
               <div className="pt-4">
                 <Auth />
               </div>
@@ -238,7 +286,7 @@ const App: React.FC = () => {
         <main className="pt-32 px-4 pb-32 relative z-10">
           <div key={activeTab} className="max-w-6xl mx-auto animate-apple-enter will-change-transform">
 
-            {/* Hero Header (Dynamic based on active tab) */}
+            {/* Hero Header */}
             <div className="text-center mb-8 md:mb-12 no-print">
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900 mb-2 tracking-tight">
                 {activeTab === 'ABOUT' && 'Tentang HitungPajakku'}
@@ -264,7 +312,7 @@ const App: React.FC = () => {
               </p>
             </div>
 
-            {/* Content Renderer - only the requested calculators */}
+            {/* Content Renderer */}
             {activeTab === 'PPH21' && <CalculatorPPH21 onContextUpdate={setContextData} />}
             {activeTab === 'PPH23' && <CalculatorPPH23 onContextUpdate={setContextData} />}
             {activeTab === 'FINAL' && <CalculatorFinal onContextUpdate={setContextData} />}
@@ -277,8 +325,6 @@ const App: React.FC = () => {
             {activeTab === 'ABOUT' && <AboutPage />}
           </div>
         </main>
-
-        {/* AI Widget removed - AI features disabled */}
 
         {/* Footer */}
         <footer className="relative z-10 mt-8 pb-8 px-4 no-print">
